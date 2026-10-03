@@ -1,0 +1,21 @@
+[versions]
+kotlin = "2.4.20"
+kover = "0.9.11"
+detekt = "1.23.8"
+dokka = "2.2.0"
+ksp = "2.3.12"
+maven = "0.37.0"
+android-gradle-plugin = "8.13.2"
+jna = "5.15.0"
+
+[plugins]
+multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+maven = { id = "com.vanniktech.maven.publish", version.ref = "maven" }
+android = { id = "com.android.library", version.ref = "android-gradle-plugin" }
+
+[libraries]
+jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }

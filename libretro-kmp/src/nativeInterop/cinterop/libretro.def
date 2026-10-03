@@ -1,0 +1,34 @@
+package = libretro.native
+headers = libretro.h
+headerFilter = libretro.h
+
+---
+
+#include <stdarg.h>
+#include <stdio.h>
+
+/*
+ * libretro's log callback is variadic (printf-like), which Kotlin/Native can't implement.
+ * This helper is the variadic function given to cores: it formats the message and forwards it to
+ * a plain (non-variadic) sink implemented in Kotlin.
+ */
+typedef void (*libretro_kmp_log_sink)(int level, const char *message);
+
+static libretro_kmp_log_sink libretro_kmp_sink = 0;
+
+static void libretro_kmp_log(enum retro_log_level level, const char *fmt, ...) {
+    char message[2048];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(message, sizeof(message), fmt, args);
+    va_end(args);
+    if (libretro_kmp_sink) libretro_kmp_sink((int) level, message);
+}
+
+static void libretro_kmp_set_log_sink(libretro_kmp_log_sink sink) {
+    libretro_kmp_sink = sink;
+}
+
+static retro_log_printf_t libretro_kmp_log_function(void) {
+    return libretro_kmp_log;
+}
