@@ -13,7 +13,7 @@ import java.io.File
  */
 actual class LibretroCore actual constructor(corePath: String, private val frontend: LibretroFrontend) : AutoCloseable {
 
-    private val lib: LibretroLib = Native.load(corePath, LibretroLib::class.java, mapOf(Library.OPTION_OPEN_FLAGS to OPEN_FLAGS))
+    private val lib: LibretroLib = Native.load(corePath, LibretroLib::class.java, loadOptions(Platform.getOSType()))
     private val environment = Environment(frontend)
 
     /** Native strings handed to the core must outlive the call, so they are kept here. */
@@ -162,14 +162,23 @@ private fun RetroSystemAvInfo.toSystemAvInfo() = SystemAvInfo(
 )
 
 /**
- * `dlopen` flags for the core: `RTLD_NOW | RTLD_LOCAL`, like the native targets (posixMain `SharedLibrary`) and
- * Android (`libretro_jni.c`). JNA's default is `RTLD_LAZY | RTLD_GLOBAL`: a core's symbols then join the process's
- * global namespace, and a second instance opened from another copy of the core file can bind to the first one's
- * functions and globals (two instances share one state). `RTLD_LOCAL` keeps each image's symbols to itself. The
- * values differ per OS (`RTLD_LOCAL` is 0 on Linux, 4 on Apple platforms); JNA ignores the flags on Windows, where
- * `LoadLibrary` keeps modules apart anyway.
+ * JNA options for loading the core: on POSIX systems, `dlopen` flags `RTLD_NOW | RTLD_LOCAL`, like the native targets
+ * (posixMain `SharedLibrary`) and Android (`libretro_jni.c`). JNA's default is `RTLD_LAZY | RTLD_GLOBAL`: a core's
+ * symbols then join the process's global namespace, and a second instance opened from another copy of the core file
+ * can bind to the first one's functions and globals (two instances share one state). `RTLD_LOCAL` keeps each image's
+ * symbols to itself. The values differ per OS (`RTLD_LOCAL` is 0 on Linux, 4 on Apple platforms).
+ *
+ * On Windows no flags are given: JNA passes them to `LoadLibraryExW`, where they mean something else (`0x2` is
+ * `LOAD_LIBRARY_AS_DATAFILE`: the DLL is mapped as data, and looking up any function then fails with "The specified
+ * module could not be found"). Windows keeps modules loaded from different files apart anyway.
+ *
+ * @param osType JNA's `Platform.getOSType()`.
  */
-private val OPEN_FLAGS: Int = if (Platform.isMac()) RTLD_NOW or APPLE_RTLD_LOCAL else RTLD_NOW or LINUX_RTLD_LOCAL
+internal fun loadOptions(osType: Int): Map<String, Any> = when (osType) {
+    Platform.WINDOWS, Platform.WINDOWSCE -> emptyMap()
+    Platform.MAC -> mapOf(Library.OPTION_OPEN_FLAGS to (RTLD_NOW or APPLE_RTLD_LOCAL))
+    else -> mapOf(Library.OPTION_OPEN_FLAGS to (RTLD_NOW or LINUX_RTLD_LOCAL))
+}
 
 private const val RTLD_NOW = 0x2
 private const val APPLE_RTLD_LOCAL = 0x4
