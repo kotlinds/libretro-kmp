@@ -42,7 +42,7 @@ Add the dependency from Maven Central:
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("dev.kotlinds:libretro-kmp:0.1.1")
+    implementation("dev.kotlinds:libretro-kmp:0.1.2")
 }
 ```
 
