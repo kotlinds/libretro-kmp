@@ -12,23 +12,23 @@ Supports Android, iOS, macOS, Linux, Windows, and JVM/Desktop from a single Kotl
 
 ## What's included
 
-| Component                  | Version         |
-|----------------------------|-----------------|
+| Component                   | Version                    |
+|-----------------------------|----------------------------|
 | libretro API (`libretro.h`) | 1 (libretro-common master) |
-| JNA (JVM/Desktop binding)  | 5.15.0          |
-| Kotlin                     | 2.4.20          |
+| JNA (JVM/Desktop binding)   | 5.15.0                     |
+| Kotlin                      | 2.4.20                     |
 
 ### Supported targets
 
-| Platform                                 | Integration                                     |
-|------------------------------------------|-------------------------------------------------|
-| Android (arm64-v8a, armeabi-v7a, x86_64) | JNI bridge (bundled) + `dlopen`                 |
-| iOS device (arm64)                       | cinterop + `dlopen`                             |
-| iOS simulator (arm64)                    | cinterop + `dlopen`                             |
-| macOS (arm64)                            | cinterop + `dlopen`                             |
-| Linux (x64, arm64)                       | cinterop + `dlopen`                             |
-| Windows (x64)                            | cinterop + `LoadLibrary`                        |
-| JVM/Desktop                              | JNA                                             |
+| Platform                                 | Integration                     |
+|------------------------------------------|---------------------------------|
+| Android (arm64-v8a, armeabi-v7a, x86_64) | JNI bridge (bundled) + `dlopen` |
+| iOS device (arm64)                       | cinterop + `dlopen`             |
+| iOS simulator (arm64)                    | cinterop + `dlopen`             |
+| macOS (arm64)                            | cinterop + `dlopen`             |
+| Linux (x64, arm64)                       | cinterop + `dlopen`             |
+| Windows (x64)                            | cinterop + `LoadLibrary`        |
+| JVM/Desktop                              | JNA                             |
 
 libretro cores are not bundled: they are shared libraries (`.dylib`, `.so`, `.dll`) that you load from a path at
 runtime. Prebuilt cores for every platform are available on the
@@ -42,7 +42,7 @@ Add the dependency from Maven Central:
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("dev.kotlinds:libretro-kmp:0.1.0")
+    implementation("dev.kotlinds:libretro-kmp:0.1.1")
 }
 ```
 
@@ -123,38 +123,38 @@ cores keep global state, and their callbacks carry no user data).
 
 ### Inputs
 
-| Device             | `id` values                                                         | Result                           |
-|--------------------|---------------------------------------------------------------------|----------------------------------|
-| `Device.JOYPAD`    | `JoypadButton.A`, `B`, `X`, `Y`, `L`, `R`, `START`, `SELECT`, D-pad… | `1` when pressed                 |
-| `Device.POINTER`   | `PointerId.X`, `PointerId.Y`, `PointerId.PRESSED`                    | Coordinates in `-0x7FFF..0x7FFF` over the whole frame; `1` while touching |
+| Device           | `id` values                                                          | Result                                                                    |
+|------------------|----------------------------------------------------------------------|---------------------------------------------------------------------------|
+| `Device.JOYPAD`  | `JoypadButton.A`, `B`, `X`, `Y`, `L`, `R`, `START`, `SELECT`, D-pad… | `1` when pressed                                                          |
+| `Device.POINTER` | `PointerId.X`, `PointerId.Y`, `PointerId.PRESSED`                    | Coordinates in `-0x7FFF..0x7FFF` over the whole frame; `1` while touching |
 
 ## API reference
 
 ### `LibretroCore`
 
-| Method / Property                                | Description                                                              |
-|--------------------------------------------------|--------------------------------------------------------------------------|
-| `systemInfo: SystemInfo`                         | Name, version, supported extensions of the core.                         |
-| `avInfo: SystemAvInfo`                           | Geometry and timings (fps, audio sample rate), after `loadGame`.         |
-| `loadGame(gamePath: String)`                     | Loads a game (passed in memory when the core asks for it).               |
-| `run()`                                          | Emulates one frame.                                                      |
-| `reset()`                                        | Resets the emulated console.                                             |
-| `setControllerPortDevice(port, device)`          | Plugs a device type in a controller port.                                |
-| `memorySize(type)` / `readMemory(type)` / `writeMemory(type, data)` | Access to `SAVE_RAM`, `RTC`, `SYSTEM_RAM`, `VIDEO_RAM`. |
-| `saveState(): ByteArray?` / `loadState(state)`   | Serializes / restores the whole emulator state.                          |
-| `close()`                                        | Unloads the game and the core. Must be called when done.                 |
+| Method / Property                                                   | Description                                                      |
+|---------------------------------------------------------------------|------------------------------------------------------------------|
+| `systemInfo: SystemInfo`                                            | Name, version, supported extensions of the core.                 |
+| `avInfo: SystemAvInfo`                                              | Geometry and timings (fps, audio sample rate), after `loadGame`. |
+| `loadGame(gamePath: String)`                                        | Loads a game (passed in memory when the core asks for it).       |
+| `run()`                                                             | Emulates one frame.                                              |
+| `reset()`                                                           | Resets the emulated console.                                     |
+| `setControllerPortDevice(port, device)`                             | Plugs a device type in a controller port.                        |
+| `memorySize(type)` / `readMemory(type)` / `writeMemory(type, data)` | Access to `SAVE_RAM`, `RTC`, `SYSTEM_RAM`, `VIDEO_RAM`.          |
+| `saveState(): ByteArray?` / `loadState(state)`                      | Serializes / restores the whole emulator state.                  |
+| `close()`                                                           | Unloads the game and the core. Must be called when done.         |
 
 ### `LibretroFrontend`
 
-| Member                                   | Description                                               |
-|------------------------------------------|-----------------------------------------------------------|
-| `systemDirectory` / `saveDirectory`      | Directories given to the core (required).                 |
-| `variable(key): String?`                 | Core option values (null = core default).                 |
-| `onVideoFrame(frame)`                    | ARGB frame ready.                                         |
-| `onAudio(samples, frames)`               | Interleaved stereo samples ready.                         |
-| `onInputPoll()` / `inputState(…)`        | Input polling and state queries.                          |
-| `onLog(level, message)`                  | Core logs.                                                |
-| `language`                               | Language reported to the core (default English).          |
+| Member                              | Description                                      |
+|-------------------------------------|--------------------------------------------------|
+| `systemDirectory` / `saveDirectory` | Directories given to the core (required).        |
+| `variable(key): String?`            | Core option values (null = core default).        |
+| `onVideoFrame(frame)`               | ARGB frame ready.                                |
+| `onAudio(samples, frames)`          | Interleaved stereo samples ready.                |
+| `onInputPoll()` / `inputState(…)`   | Input polling and state queries.                 |
+| `onLog(level, message)`             | Core logs.                                       |
+| `language`                          | Language reported to the core (default English). |
 
 ## Tests
 
