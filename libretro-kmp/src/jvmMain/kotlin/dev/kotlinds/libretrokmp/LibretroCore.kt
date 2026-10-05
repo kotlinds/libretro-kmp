@@ -1,8 +1,10 @@
 package dev.kotlinds.libretrokmp
 
 import com.sun.jna.CallbackReference
+import com.sun.jna.Library
 import com.sun.jna.Memory
 import com.sun.jna.Native
+import com.sun.jna.Platform
 import com.sun.jna.Pointer
 import java.io.File
 
@@ -11,7 +13,7 @@ import java.io.File
  */
 actual class LibretroCore actual constructor(corePath: String, private val frontend: LibretroFrontend) : AutoCloseable {
 
-    private val lib: LibretroLib = Native.load(corePath, LibretroLib::class.java)
+    private val lib: LibretroLib = Native.load(corePath, LibretroLib::class.java, mapOf(Library.OPTION_OPEN_FLAGS to OPEN_FLAGS))
     private val environment = Environment(frontend)
 
     /** Native strings handed to the core must outlive the call, so they are kept here. */
@@ -158,3 +160,17 @@ private fun RetroSystemAvInfo.toSystemAvInfo() = SystemAvInfo(
     geometry = geometry.toGameGeometry(),
     timing = SystemTiming(timing.fps, timing.sample_rate),
 )
+
+/**
+ * `dlopen` flags for the core: `RTLD_NOW | RTLD_LOCAL`, like the native targets (posixMain `SharedLibrary`) and
+ * Android (`libretro_jni.c`). JNA's default is `RTLD_LAZY | RTLD_GLOBAL`: a core's symbols then join the process's
+ * global namespace, and a second instance opened from another copy of the core file can bind to the first one's
+ * functions and globals (two instances share one state). `RTLD_LOCAL` keeps each image's symbols to itself. The
+ * values differ per OS (`RTLD_LOCAL` is 0 on Linux, 4 on Apple platforms); JNA ignores the flags on Windows, where
+ * `LoadLibrary` keeps modules apart anyway.
+ */
+private val OPEN_FLAGS: Int = if (Platform.isMac()) RTLD_NOW or APPLE_RTLD_LOCAL else RTLD_NOW or LINUX_RTLD_LOCAL
+
+private const val RTLD_NOW = 0x2
+private const val APPLE_RTLD_LOCAL = 0x4
+private const val LINUX_RTLD_LOCAL = 0x0
